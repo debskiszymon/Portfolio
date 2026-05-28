@@ -23,7 +23,7 @@ header{background:var(--card);border-bottom:1px solid var(--border);padding:0 28
 .header-inner{display:flex;align-items:center;gap:24px;padding:14px 0 0}
 .logo{font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.02em;padding-bottom:14px}
 .logo span{color:var(--accent)}
-nav{display:flex;gap:0;margin-left:auto}
+nav{display:flex;gap:0}
 nav button{padding:10px 20px;font-size:13px;font-weight:500;color:var(--muted2);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s}
 nav button.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
 nav button:hover:not(.active){color:var(--text)}
@@ -119,6 +119,10 @@ select option{background:var(--card2)}
   <div class="header-inner">
     <div class="logo">Portfolio <span>•</span> Szymon</div>
     <div style="margin-left:16px;font-size:12px;color:var(--muted2)" id="last-updated"></div>
+    <div style="display:flex;gap:8px;margin-left:auto;margin-right:12px;padding-bottom:14px">
+      <button class="btn btn-ghost btn-sm" onclick="exportData()">⬇ Export</button>
+      <label class="btn btn-ghost btn-sm" style="cursor:pointer;margin:0">⬆ Import<input type="file" accept=".json" onchange="importData(event)" style="display:none"/></label>
+    </div>
     <nav>
       <button class="active" onclick="showTab('purchases')">Purchases</button>
       <button onclick="showTab('update')">Update</button>
@@ -804,6 +808,53 @@ function deleteQ(q) {
   renderHistoryChart();
   renderHistoryTable();
   flash("Deleted");
+}
+
+
+// ═══════════════════════════════════════════════════════
+// EXPORT / IMPORT
+// ═══════════════════════════════════════════════════════
+function exportData() {
+  const data = {
+    version: 1,
+    exported: new Date().toISOString(),
+    fx:        state.fx,
+    holdings:  state.holdings,
+    history:   state.history,
+    purchases: state.purchases,
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href     = url;
+  a.download = "portfolio-backup-" + new Date().toISOString().split("T")[0] + ".json";
+  a.click();
+  URL.revokeObjectURL(url);
+  flash("Exported ✓");
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.version) throw new Error("Invalid file");
+      if (!confirm("This will replace all current data. Continue?")) return;
+      if (data.fx)        { state.fx        = data.fx;        ss("fx",        data.fx); }
+      if (data.holdings)  { state.holdings  = data.holdings;  ss("holdings",  data.holdings); }
+      if (data.history)   { state.history   = data.history;   ss("history",   data.history); }
+      if (data.purchases) { state.purchases = data.purchases; ss("purchases", data.purchases); }
+      renderPurchases();
+      renderHoldings();
+      flash("Imported ✓ — data restored");
+    } catch(err) {
+      flash("Invalid backup file", true);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = "";
 }
 
 // ═══════════════════════════════════════════════════════
