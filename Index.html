@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Portfolio — Szymon</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090F;--card:#0E1320;--card2:#141B2D;--border:#1C2740;
+  --accent:#3B82F6;--green:#22C55E;--red:#EF4444;--yellow:#F59E0B;
+  --text:#E8EDF5;--muted:#4B5A7A;--muted2:#8896B3;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* HEADER */
+header{background:var(--card);border-bottom:1px solid var(--border);padding:0 28px;position:sticky;top:0;z-index:100}
+.header-inner{display:flex;align-items:center;gap:24px;padding:14px 0 0}
+.logo{font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.02em;padding-bottom:14px}
+.logo span{color:var(--accent)}
+nav{display:flex;gap:0;margin-left:auto}
+nav button{padding:10px 20px;font-size:13px;font-weight:500;color:var(--muted2);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s}
+nav button.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+nav button:hover:not(.active){color:var(--text)}
+
+/* PAGES */
+.page{display:none;padding:28px;max-width:1200px;margin:0 auto}
+.page.active{display:block}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 24px}
+.card2{background:var(--card2);border-radius:10px;padding:14px 18px}
+.section-label{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
+.gap{margin-bottom:18px}
+.gap-sm{margin-bottom:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:800px){.grid2,.grid3,.grid4{grid-template-columns:1fr 1fr}}
+@media(max-width:500px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+
+/* KPI */
+.kpi-label{font-size:11px;color:var(--muted2);margin-bottom:6px}
+.kpi-val{font-size:26px;font-weight:700;font-family:'JetBrains Mono',monospace;line-height:1;letter-spacing:-.02em}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:5px}
+
+/* TABLES */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 14px;color:var(--muted);font-weight:500;font-size:11px;letter-spacing:.06em;border-bottom:1px solid var(--border)}
+td{padding:10px 14px;border-bottom:1px solid rgba(28,39,64,.6)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(59,130,246,.03)}
+.mono{font-family:'JetBrains Mono',monospace}
+
+/* FORMS */
+label{display:block;font-size:11px;font-weight:500;color:var(--muted2);margin-bottom:6px;letter-spacing:.04em}
+input,select{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:9px 13px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border .15s}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.08)}
+input::placeholder{color:var(--muted)}
+select option{background:var(--card2)}
+.form-grid{display:grid;gap:12px}
+.form-grid.c2{grid-template-columns:1fr 1fr}
+.form-grid.c3{grid-template-columns:1fr 1fr 1fr}
+.form-grid.c4{grid-template-columns:repeat(4,1fr)}
+.form-grid.c5{grid-template-columns:repeat(5,1fr)}
+@media(max-width:700px){.form-grid.c4,.form-grid.c5,.form-grid.c3{grid-template-columns:1fr 1fr}}
+
+/* BUTTONS */
+.btn{padding:9px 18px;border-radius:9px;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#2563EB}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted2)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:transparent;border:1px solid rgba(239,68,68,.3);color:var(--red);padding:5px 10px;font-size:11px;border-radius:7px}
+.btn-danger:hover{background:rgba(239,68,68,.08)}
+.btn-sm{padding:6px 14px;font-size:12px}
+
+/* TAGS */
+.tag{padding:3px 9px;border-radius:6px;font-size:11px;font-weight:600}
+.tag-etf{background:rgba(59,130,246,.12);color:#60A5FA}
+.tag-akcje{background:rgba(139,92,246,.12);color:#A78BFA}
+.tag-bonds{background:rgba(245,158,11,.12);color:#FCD34D}
+
+/* PRICE STATUS */
+.price-ok{color:var(--green);font-size:11px}
+.price-warn{color:var(--yellow);font-size:11px}
+.price-err{color:var(--muted);font-size:11px}
+.price-loading{color:var(--muted);font-size:11px;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* CHART */
+.chart-wrap{position:relative;height:300px;margin-top:8px}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:16px 0}
+
+/* FLASH */
+.flash{position:fixed;bottom:24px;right:24px;background:var(--green);color:#fff;padding:10px 20px;border-radius:10px;font-weight:600;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;display:flex;align-items:center;gap:8px}
+.flash.show{opacity:1}
+
+/* SPINNER */
+.spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* VERIFY BADGE */
+.verify-match{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2);padding:3px 9px;border-radius:6px;font-size:11px}
+.verify-diff{background:rgba(245,158,11,.1);color:var(--yellow);border:1px solid rgba(245,158,11,.2);padding:3px 9px;border-radius:6px;font-size:11px}
+.verify-na{color:var(--muted);font-size:11px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">Portfolio <span>•</span> Szymon</div>
+    <div style="margin-left:16px;font-size:12px;color:var(--muted2)" id="last-updated"></div>
+    <nav>
+      <button class="active" onclick="showTab('purchases')">Purchases</button>
+      <button onclick="showTab('update')">Update</button>
+    </nav>
+  </div>
+</header>
+
+<div class="flash" id="flash"><span id="flash-text">Saved</span></div>
+
+<!-- ═══════════ PURCHASES ═══════════ -->
+<div class="page active" id="page-purchases">
+
+  <!-- Add purchase form -->
+  <div class="card gap">
+    <div class="section-label">Add Transaction</div>
+    <div class="form-grid c5 gap-sm">
+      <div><label>Ticker</label><input id="f-ticker" placeholder="e.g. VWRA.L" oninput="this.value=this.value.toUpperCase()"/></div>
+      <div><label>Name</label><input id="f-name" placeholder="e.g. Vanguard FTSE All-World"/></div>
+      <div><label>Broker</label>
+        <select id="f-broker">
+          <option>mBank</option><option>BOS</option><option>XTB</option>
+          <option>PKO</option><option>Planet Shares</option><option>Other</option>
+        </select>
+      </div>
+      <div><label>Asset Class</label>
+        <select id="f-class">
+          <option>ETF</option><option>Stocks</option><option>Bonds</option><option>Cash</option>
+        </select>
+      </div>
+      <div><label>Currency</label>
+        <select id="f-currency"><option>EUR</option><option>USD</option><option>GBP</option><option>PLN</option></select>
+      </div>
+    </div>
+    <div class="form-grid c5">
+      <div><label>Quantity</label><input id="f-qty" type="number" step="any" placeholder="e.g. 10"/></div>
+      <div><label>Your Price (orig. currency)</label><input id="f-price" type="number" step="any" placeholder="e.g. 112.50"/></div>
+      <div><label>Date</label><input id="f-date" type="date"/></div>
+      <div><label>FX Rate (to PLN)</label><input id="f-fx" type="number" step="any" placeholder="e.g. 4.25"/></div>
+      <div><label>Notes</label><input id="f-notes" placeholder="e.g. IKE, vesting"/></div>
+    </div>
+
+    <!-- Price verification area -->
+    <div id="price-verify-area" style="display:none;margin-top:12px;padding:12px 16px;background:var(--card2);border-radius:10px;border-left:3px solid var(--border)">
+      <div style="font-size:12px;color:var(--muted2);margin-bottom:6px">Historical price check</div>
+      <div id="price-verify-result" style="font-size:13px"></div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:14px;align-items:center">
+      <button class="btn btn-ghost btn-sm" onclick="verifyPrice()">🔍 Verify price</button>
+      <button class="btn btn-primary" onclick="addPurchase()">+ Add transaction</button>
+      <span id="add-status" style="font-size:12px;color:var(--muted)"></span>
+    </div>
+  </div>
+
+  <!-- Holdings summary -->
+  <div class="card gap">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="section-label" style="margin-bottom:0">Current Holdings</div>
+      <div style="font-size:12px;color:var(--muted2)">Based on avg purchase price × current FX</div>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th>Ticker</th><th>Name</th><th>Broker</th><th>Class</th><th>CCY</th>
+          <th>Qty</th><th>Avg Price</th><th>Cost PLN</th><th>Live Price</th><th>Value PLN</th><th>P&amp;L</th><th></th>
+        </tr></thead>
+        <tbody id="holdings-tbody"></tbody>
+        <tfoot>
+          <tr style="border-top:1px solid var(--border)">
+            <td colspan="7" style="color:var(--muted);font-size:12px;padding:10px 14px">Total</td>
+            <td class="mono" id="total-cost" style="font-weight:600;color:var(--muted2)">—</td>
+            <td></td>
+            <td class="mono" id="total-value" style="font-weight:700;color:var(--accent)">—</td>
+            <td class="mono" id="total-pl" style="font-weight:700">—</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- Transaction history -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="section-label" style="margin-bottom:0">Transaction History</div>
+      <div style="font-size:12px;color:var(--muted2)" id="tx-count"></div>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th>Date</th><th>Ticker</th><th>Name</th><th>Broker</th><th>Class</th>
+          <th>CCY</th><th>Qty</th><th>Price</th><th>FX</th><th>Cost PLN</th><th>Market Price*</th><th>Notes</th><th></th>
+        </tr></thead>
+        <tbody id="purchases-tbody"></tbody>
+      </table>
+    </div>
+    <p style="color:var(--muted);font-size:11px;margin-top:10px">* Historical market price fetched from Yahoo Finance on the transaction date</p>
+  </div>
+</div>
+
+<!-- ═══════════ UPDATE ═══════════ -->
+<div class="page" id="page-update">
+
+  <!-- Live portfolio value -->
+  <div class="card gap">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="section-label" style="margin-bottom:0">Live Portfolio Value</div>
+      <button class="btn btn-primary btn-sm" onclick="fetchLivePrices()" id="refresh-btn">
+        ↻ Refresh prices
+      </button>
+    </div>
+    <div class="grid4 gap-sm">
+      <div class="card2">
+        <div class="kpi-label">Portfolio Value</div>
+        <div class="kpi-val" id="live-total" style="color:var(--accent)">—</div>
+        <div class="kpi-sub" id="live-updated">not loaded yet</div>
+      </div>
+      <div class="card2">
+        <div class="kpi-label">Total Invested</div>
+        <div class="kpi-val" id="live-invested" style="color:var(--muted2)">—</div>
+        <div class="kpi-sub">all purchases in PLN</div>
+      </div>
+      <div class="card2">
+        <div class="kpi-label">Total Gain / Loss</div>
+        <div class="kpi-val" id="live-gain">—</div>
+        <div class="kpi-sub" id="live-gain-pct">—</div>
+      </div>
+      <div class="card2">
+        <div class="kpi-label">FX Rates (manual)</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px" id="fx-mini"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live prices per holding -->
+  <div class="card gap">
+    <div class="section-label">Live Prices by Holding</div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th>Ticker</th><th>Qty</th><th>Avg Cost</th><th>Live Price</th><th>CCY</th>
+          <th>FX Rate</th><th>Value PLN</th><th>P&amp;L PLN</th><th>P&amp;L %</th><th>Status</th>
+        </tr></thead>
+        <tbody id="live-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- FX rates -->
+  <div class="card gap">
+    <div class="section-label">FX Rates — manual update</div>
+    <div class="form-grid c4">
+      <div>
+        <label>EUR / PLN</label>
+        <input id="fx-EUR" type="number" step="0.01"/>
+      </div>
+      <div>
+        <label>USD / PLN</label>
+        <input id="fx-USD" type="number" step="0.01"/>
+      </div>
+      <div>
+        <label>GBP / PLN</label>
+        <input id="fx-GBP" type="number" step="0.01"/>
+      </div>
+      <div style="display:flex;align-items:flex-end">
+        <button class="btn btn-primary" style="width:100%" onclick="saveFX()">Save FX</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quarterly history -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="section-label" style="margin-bottom:0">Quarterly History</div>
+      <button class="btn btn-ghost btn-sm" onclick="toggleAddQ()">+ Add quarter</button>
+    </div>
+
+    <div class="chart-wrap gap-sm"><canvas id="hist-chart"></canvas></div>
+
+    <!-- Add quarter form -->
+    <div id="add-q-form" style="display:none;margin:16px 0;padding:16px;background:var(--card2);border-radius:10px">
+      <div class="form-grid c4">
+        <div><label>Quarter</label><input id="q-quarter" placeholder="e.g. Q1-2025"/></div>
+        <div><label>Invested PLN</label><input id="q-inv" type="number" placeholder="e.g. 650000"/></div>
+        <div><label>Market Value PLN</label><input id="q-val" type="number" placeholder="e.g. 800000"/></div>
+        <div style="display:flex;align-items:flex-end;gap:8px">
+          <button class="btn btn-primary" style="flex:1" onclick="saveQuarter()">Save</button>
+          <button class="btn btn-ghost" onclick="toggleAddQ()">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="overflow-x:auto;margin-top:16px">
+      <table>
+        <thead><tr>
+          <th>Quarter</th><th>Invested PLN</th><th>Market Value PLN</th><th>Gain / Loss</th><th>Return %</th><th></th>
+        </tr></thead>
+        <tbody id="history-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+function ls(key, def) {
+  try { const v = localStorage.getItem("pf2_"+key); return v ? JSON.parse(v) : JSON.parse(JSON.stringify(def)); }
+  catch { return JSON.parse(JSON.stringify(def)); }
+}
+function ss(key, val) { localStorage.setItem("pf2_"+key, JSON.stringify(val)); }
+
+const DEF_FX = { EUR: 4.25, USD: 3.95, GBP: 5.00, PLN: 1.00 };
+
+const DEF_HOLDINGS = [
+  { id:1,  ticker:"LOR.D",   name:"L'Oréal",  broker:"Planet Shares", cls:"Stocks", currency:"EUR", qty:368, avgPrice:330,   fx:4.28, date:"2024-09-01", notes:"", marketPrice:null },
+  { id:2,  ticker:"SWDA.L",  name:"SWDA",     broker:"mBank",         cls:"ETF",    currency:"GBP", qty:52,  avgPrice:59.15, fx:5.55, date:"2022-09-01", notes:"", marketPrice:null },
+  { id:3,  ticker:"VWRA.L",  name:"VWRA",     broker:"mBank",         cls:"ETF",    currency:"USD", qty:127, avgPrice:114,   fx:4.18, date:"2023-06-01", notes:"IKE", marketPrice:null },
+  { id:4,  ticker:"VWCE.DE", name:"VWCE",     broker:"BOS",           cls:"ETF",    currency:"EUR", qty:127, avgPrice:114,   fx:4.29, date:"2023-09-01", notes:"IKE", marketPrice:null },
+  { id:5,  ticker:"QDVE.DE", name:"QDVE",     broker:"XTB",           cls:"ETF",    currency:"EUR", qty:179, avgPrice:28.15, fx:4.28, date:"2024-09-01", notes:"", marketPrice:null },
+  { id:6,  ticker:"ROS0229", name:"Obligacje ROS", broker:"PKO",      cls:"Bonds",  currency:"PLN", qty:332, avgPrice:100,   fx:1,    date:"2023-03-01", notes:"", marketPrice:100 },
+  { id:7,  ticker:"ROD1135", name:"Obligacje ROD", broker:"PKO",      cls:"Bonds",  currency:"PLN", qty:212, avgPrice:100,   fx:1,    date:"2023-12-01", notes:"", marketPrice:100 },
+];
+
+const DEF_HISTORY = [
+  {q:"Q2-2017",inv:3855,val:3855},{q:"Q3-2017",inv:3855,val:3727},{q:"Q4-2017",inv:3855,val:4043},
+  {q:"Q1-2018",inv:3855,val:3828},{q:"Q2-2018",inv:36900,val:37281},{q:"Q3-2018",inv:36900,val:39689},
+  {q:"Q4-2018",inv:36900,val:37630},{q:"Q1-2019",inv:36900,val:39781},{q:"Q2-2019",inv:36900,val:46195},
+  {q:"Q3-2019",inv:36900,val:45989},{q:"Q4-2019",inv:36900,val:49375},{q:"Q1-2020",inv:52144,val:63154},
+  {q:"Q2-2020",inv:123880,val:141081},{q:"Q3-2020",inv:123880,val:148356},{q:"Q4-2020",inv:123880,val:147678},
+  {q:"Q1-2021",inv:123880,val:155731},{q:"Q2-2021",inv:356159,val:415006},{q:"Q3-2021",inv:356159,val:472273},
+  {q:"Q4-2021",inv:356159,val:489054},{q:"Q1-2022",inv:356159,val:467136},{q:"Q2-2022",inv:356159,val:434565},
+  {q:"Q3-2022",inv:398706,val:510556},{q:"Q4-2022",inv:398706,val:441812},{q:"Q1-2023",inv:431906,val:552857},
+  {q:"Q2-2023",inv:452124,val:606694},{q:"Q3-2023",inv:460628,val:590656},{q:"Q4-2023",inv:462178,val:590656},
+  {q:"Q3-2024",inv:571394,val:736952},{q:"Q4-2024",inv:649932,val:745628},
+];
+
+const DEF_PURCHASES = [];
+
+let state = {
+  fx:        ls("fx",        DEF_FX),
+  holdings:  ls("holdings",  DEF_HOLDINGS),
+  history:   ls("history",   DEF_HISTORY),
+  purchases: ls("purchases", DEF_PURCHASES),
+};
+
+// ═══════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════
+const fmtK = n => n >= 1e6 ? (n/1e6).toFixed(2)+"M" : n >= 1e3 ? Math.round(n/1000)+"k" : Math.round(n)+"";
+const fmtPLN = n => fmtK(n) + " PLN";
+const fmtNum = n => n?.toFixed(2) ?? "—";
+
+function flash(msg, isErr) {
+  const el = document.getElementById("flash");
+  el.style.background = isErr ? "var(--red)" : "var(--green)";
+  document.getElementById("flash-text").textContent = msg;
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 2500);
+}
+
+function tagClass(cls) {
+  if (cls === "ETF") return "tag-etf";
+  if (cls === "Stocks") return "tag-akcje";
+  return "tag-bonds";
+}
+
+// ═══════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════
+function showTab(t) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+  document.getElementById("page-"+t).classList.add("active");
+  const idx = t === "purchases" ? 0 : 1;
+  document.querySelectorAll("nav button")[idx].classList.add("active");
+  if (t === "update") { renderUpdate(); }
+}
+
+// ═══════════════════════════════════════════════════════
+// PRICE FETCHING (Yahoo Finance via corsproxy)
+// ═══════════════════════════════════════════════════════
+async function fetchYahoo(ticker) {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=5d`;
+  const proxies = [
+    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  ];
+  for (const proxy of proxies) {
+    try {
+      const r = await fetch(proxy, { signal: AbortSignal.timeout(6000) });
+      if (!r.ok) continue;
+      const data = await r.json();
+      const closes = data?.chart?.result?.[0]?.indicators?.quote?.[0]?.close;
+      const price = closes?.filter(Boolean).at(-1);
+      if (price) return +price.toFixed(4);
+    } catch {}
+  }
+  return null;
+}
+
+async function fetchYahooOnDate(ticker, dateStr) {
+  // dateStr = "YYYY-MM-DD"
+  const d = new Date(dateStr);
+  const period1 = Math.floor(d.getTime() / 1000) - 86400 * 3;
+  const period2 = Math.floor(d.getTime() / 1000) + 86400 * 3;
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&period1=${period1}&period2=${period2}`;
+  const proxies = [
+    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  ];
+  for (const proxy of proxies) {
+    try {
+      const r = await fetch(proxy, { signal: AbortSignal.timeout(6000) });
+      if (!r.ok) continue;
+      const data = await r.json();
+      const closes = data?.chart?.result?.[0]?.indicators?.quote?.[0]?.close;
+      const price = closes?.filter(Boolean).at(-1);
+      if (price) return +price.toFixed(4);
+    } catch {}
+  }
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════
+// VERIFY PRICE
+// ═══════════════════════════════════════════════════════
+async function verifyPrice() {
+  const ticker = document.getElementById("f-ticker").value.trim();
+  const price  = parseFloat(document.getElementById("f-price").value);
+  const date   = document.getElementById("f-date").value;
+  if (!ticker) { flash("Enter ticker first", true); return; }
+
+  const area = document.getElementById("price-verify-area");
+  const res  = document.getElementById("price-verify-result");
+  area.style.display = "block";
+  res.innerHTML = '<span class="price-loading">Fetching historical price from Yahoo Finance…</span>';
+
+  const marketPrice = date ? await fetchYahooOnDate(ticker, date) : await fetchYahoo(ticker);
+
+  if (!marketPrice) {
+    res.innerHTML = '<span class="price-err">⚠ Could not fetch price (API unavailable). You can still add the transaction manually.</span>';
+    return;
+  }
+
+  if (!price || isNaN(price)) {
+    res.innerHTML = `<span class="price-ok">Market price on ${date||"today"}: <strong>${marketPrice.toFixed(2)}</strong></span>`;
+    document.getElementById("f-price").value = marketPrice.toFixed(2);
+    return;
+  }
+
+  const diff = Math.abs((price - marketPrice) / marketPrice * 100);
+  if (diff < 2) {
+    res.innerHTML = `<span class="verify-match">✓ Match</span> Your price <strong>${price}</strong> vs market <strong>${marketPrice.toFixed(2)}</strong> — diff ${diff.toFixed(1)}%`;
+  } else {
+    res.innerHTML = `<span class="verify-diff">⚠ Difference</span> Your price <strong>${price}</strong> vs market <strong>${marketPrice.toFixed(2)}</strong> — diff <strong>${diff.toFixed(1)}%</strong>. This is normal for different exchanges or times.`;
+  }
+
+  // Store on the form for later
+  area.dataset.marketPrice = marketPrice;
+}
+
+// ═══════════════════════════════════════════════════════
+// ADD PURCHASE
+// ═══════════════════════════════════════════════════════
+function addPurchase() {
+  const ticker = document.getElementById("f-ticker").value.trim().toUpperCase();
+  const name   = document.getElementById("f-name").value.trim() || ticker;
+  const broker = document.getElementById("f-broker").value;
+  const cls    = document.getElementById("f-class").value;
+  const cur    = document.getElementById("f-currency").value;
+  const qty    = parseFloat(document.getElementById("f-qty").value);
+  const price  = parseFloat(document.getElementById("f-price").value);
+  const date   = document.getElementById("f-date").value;
+  const fx     = parseFloat(document.getElementById("f-fx").value) || state.fx[cur] || 1;
+  const notes  = document.getElementById("f-notes").value.trim();
+  const area   = document.getElementById("price-verify-area");
+  const mktP   = parseFloat(area.dataset.marketPrice) || null;
+
+  if (!ticker || isNaN(qty) || isNaN(price)) { flash("Ticker, qty and price are required", true); return; }
+
+  const purchase = { id: Date.now(), ticker, name, broker, cls, currency:cur, qty, price, date, fx, notes, marketPrice: mktP };
+  state.purchases.push(purchase);
+  ss("purchases", state.purchases);
+
+  // Update holdings (weighted average)
+  const h = state.holdings.find(x => x.ticker === ticker);
+  if (h) {
+    const totalQty  = h.qty + qty;
+    const totalCost = h.qty * h.avgPrice + qty * price;
+    h.qty = totalQty;
+    h.avgPrice = totalCost / totalQty;
+    h.fx = fx;
+  } else {
+    state.holdings.push({ id: Date.now()+1, ticker, name, broker, cls, currency:cur, qty, avgPrice:price, fx, date, notes, marketPrice: mktP });
+  }
+  ss("holdings", state.holdings);
+
+  // Reset form
+  ["f-ticker","f-name","f-qty","f-price","f-notes","f-fx"].forEach(id => document.getElementById(id).value = "");
+  area.style.display = "none"; area.dataset.marketPrice = "";
+
+  renderPurchases();
+  renderHoldings();
+  flash("Transaction added ✓");
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER PURCHASES
+// ═══════════════════════════════════════════════════════
+function renderPurchases() {
+  const tbody = document.getElementById("purchases-tbody");
+  document.getElementById("tx-count").textContent = state.purchases.length + " transactions";
+
+  if (!state.purchases.length) {
+    tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;color:var(--muted);padding:24px">No transactions yet — add your first purchase above</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = [...state.purchases].reverse().map(p => {
+    const costPLN = p.qty * p.price * (p.fx || state.fx[p.currency] || 1);
+    const mktBadge = p.marketPrice
+      ? `<span class="verify-match">${p.marketPrice.toFixed(2)}</span>`
+      : `<span class="verify-na">—</span>`;
+    return `<tr>
+      <td style="color:var(--muted2);font-size:12px">${p.date||"—"}</td>
+      <td class="mono" style="color:var(--accent);font-weight:600">${p.ticker}</td>
+      <td style="color:var(--muted2)">${p.name}</td>
+      <td style="color:var(--muted)">${p.broker}</td>
+      <td><span class="tag ${tagClass(p.cls)}">${p.cls}</span></td>
+      <td class="mono" style="color:var(--muted)">${p.currency}</td>
+      <td class="mono">${p.qty}</td>
+      <td class="mono">${p.price.toFixed(2)}</td>
+      <td class="mono" style="color:var(--muted);font-size:11px">${(p.fx||1).toFixed(3)}</td>
+      <td class="mono" style="color:var(--muted2)">${fmtPLN(costPLN)}</td>
+      <td>${mktBadge}</td>
+      <td style="color:var(--muted);font-size:12px">${p.notes||""}</td>
+      <td><button class="btn btn-danger" onclick="deletePurchase(${p.id})">✕</button></td>
+    </tr>`;
+  }).join("");
+}
+
+function deletePurchase(id) {
+  if (!confirm("Delete this transaction?")) return;
+  state.purchases = state.purchases.filter(p => p.id !== id);
+  ss("purchases", state.purchases);
+  renderPurchases();
+  flash("Deleted");
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER HOLDINGS
+// ═══════════════════════════════════════════════════════
+function renderHoldings() {
+  const tbody = document.getElementById("holdings-tbody");
+  let totalCost = 0, totalValue = 0;
+
+  tbody.innerHTML = state.holdings.map(h => {
+    const fx     = state.fx[h.currency] || 1;
+    const cost   = h.qty * h.avgPrice * (h.fx || fx);
+    const mktP   = h.marketPrice;
+    const val    = mktP ? h.qty * mktP * fx : cost;
+    const pl     = val - cost;
+    const plPct  = cost > 0 ? (pl/cost*100) : 0;
+    totalCost += cost; totalValue += val;
+
+    const priceCell = mktP
+      ? `<span class="mono" style="color:var(--green)">${mktP.toFixed(2)} <span class="price-ok">live</span></span>`
+      : `<span class="price-err">not loaded</span>`;
+    const plColor = pl >= 0 ? "var(--green)" : "var(--red)";
+
+    return `<tr>
+      <td class="mono" style="color:var(--accent);font-weight:700">${h.ticker}</td>
+      <td>${h.name}</td>
+      <td style="color:var(--muted)">${h.broker}</td>
+      <td><span class="tag ${tagClass(h.cls)}">${h.cls}</span></td>
+      <td class="mono" style="color:var(--muted)">${h.currency}</td>
+      <td class="mono">${h.qty}</td>
+      <td class="mono" style="color:var(--muted2)">${h.avgPrice.toFixed(2)}</td>
+      <td class="mono" style="color:var(--muted2)">${fmtPLN(cost)}</td>
+      <td>${priceCell}</td>
+      <td class="mono" style="font-weight:600;color:var(--accent)">${fmtPLN(val)}</td>
+      <td class="mono" style="color:${plColor}">${pl>=0?"+":""}${fmtPLN(pl)}<br><span style="font-size:11px">${pl>=0?"+":""}${plPct.toFixed(1)}%</span></td>
+      <td><button class="btn btn-danger" onclick="deleteHolding(${h.id})">✕</button></td>
+    </tr>`;
+  }).join("");
+
+  const totalPL = totalValue - totalCost;
+  document.getElementById("total-cost").textContent  = fmtPLN(totalCost);
+  document.getElementById("total-value").textContent = fmtPLN(totalValue);
+  document.getElementById("total-pl").textContent    = (totalPL>=0?"+":"") + fmtPLN(totalPL);
+  document.getElementById("total-pl").style.color    = totalPL >= 0 ? "var(--green)" : "var(--red)";
+}
+
+function deleteHolding(id) {
+  if (!confirm("Remove this holding?")) return;
+  state.holdings = state.holdings.filter(h => h.id !== id);
+  ss("holdings", state.holdings);
+  renderHoldings();
+  flash("Removed");
+}
+
+// ═══════════════════════════════════════════════════════
+// LIVE PRICES
+// ═══════════════════════════════════════════════════════
+async function fetchLivePrices() {
+  const btn = document.getElementById("refresh-btn");
+  btn.innerHTML = '<span class="spinner"></span> Fetching…';
+  btn.disabled = true;
+
+  for (const h of state.holdings) {
+    if (h.cls === "Bonds") { h.marketPrice = h.avgPrice; continue; }
+    const price = await fetchYahoo(h.ticker);
+    if (price) h.marketPrice = price;
+  }
+
+  ss("holdings", state.holdings);
+  const now = new Date().toLocaleTimeString();
+  document.getElementById("live-updated").textContent = "updated " + now;
+  document.getElementById("last-updated").textContent = "Prices: " + now;
+
+  btn.innerHTML = "↻ Refresh prices";
+  btn.disabled = false;
+
+  renderUpdate();
+  renderHoldings();
+  flash("Prices updated ✓");
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER UPDATE TAB
+// ═══════════════════════════════════════════════════════
+function renderUpdate() {
+  // KPIs
+  let totalCost = 0, totalValue = 0;
+  state.holdings.forEach(h => {
+    const fx   = state.fx[h.currency] || 1;
+    const cost = h.qty * h.avgPrice * (h.fx || fx);
+    const val  = h.marketPrice ? h.qty * h.marketPrice * fx : cost;
+    totalCost  += cost;
+    totalValue += val;
+  });
+  const gain    = totalValue - totalCost;
+  const gainPct = totalCost > 0 ? (gain/totalCost*100) : 0;
+
+  document.getElementById("live-total").textContent    = fmtPLN(totalValue);
+  document.getElementById("live-invested").textContent = fmtPLN(totalCost);
+  document.getElementById("live-gain").textContent     = (gain>=0?"+":"") + fmtPLN(gain);
+  document.getElementById("live-gain").style.color     = gain >= 0 ? "var(--green)" : "var(--red)";
+  document.getElementById("live-gain-pct").textContent = (gain>=0?"+":"") + gainPct.toFixed(1) + "% return";
+
+  // FX mini
+  document.getElementById("fx-mini").innerHTML = ["EUR","USD","GBP"].map(c =>
+    `<div style="display:flex;justify-content:space-between;font-size:12px">
+      <span style="color:var(--muted2)">${c}/PLN</span>
+      <span class="mono" style="color:var(--accent)">${state.fx[c]?.toFixed(3)}</span>
+    </div>`).join("");
+
+  // Live table
+  const tbody = document.getElementById("live-tbody");
+  tbody.innerHTML = state.holdings.map(h => {
+    const fx     = state.fx[h.currency] || 1;
+    const cost   = h.qty * h.avgPrice * (h.fx || fx);
+    const mktP   = h.marketPrice;
+    const val    = mktP ? h.qty * mktP * fx : null;
+    const pl     = val != null ? val - cost : null;
+    const plPct  = pl != null && cost > 0 ? pl/cost*100 : null;
+    const plColor = pl == null ? "var(--muted)" : pl >= 0 ? "var(--green)" : "var(--red)";
+    const statusBadge = mktP
+      ? `<span class="verify-match">live</span>`
+      : `<span style="color:var(--muted);font-size:11px">—</span>`;
+
+    return `<tr>
+      <td class="mono" style="color:var(--accent);font-weight:700">${h.ticker}</td>
+      <td class="mono">${h.qty}</td>
+      <td class="mono" style="color:var(--muted2)">${h.avgPrice.toFixed(2)} ${h.currency}</td>
+      <td class="mono" style="color:${mktP?'var(--text)':'var(--muted)'}">${mktP ? mktP.toFixed(2) : "—"}</td>
+      <td class="mono" style="color:var(--muted)">${h.currency}</td>
+      <td class="mono" style="color:var(--muted)">${fx.toFixed(3)}</td>
+      <td class="mono" style="font-weight:600;color:var(--accent)">${val != null ? fmtPLN(val) : fmtPLN(cost)+"*"}</td>
+      <td class="mono" style="color:${plColor}">${pl != null ? (pl>=0?"+":"")+fmtPLN(pl) : "—"}</td>
+      <td class="mono" style="color:${plColor}">${plPct != null ? (plPct>=0?"+":"")+plPct.toFixed(1)+"%" : "—"}</td>
+      <td>${statusBadge}</td>
+    </tr>`;
+  }).join("");
+
+  // FX inputs
+  ["EUR","USD","GBP"].forEach(c => {
+    const el = document.getElementById("fx-"+c);
+    if (el) el.value = state.fx[c]?.toFixed(3) || "";
+  });
+
+  renderHistoryChart();
+  renderHistoryTable();
+}
+
+// ═══════════════════════════════════════════════════════
+// FX
+// ═══════════════════════════════════════════════════════
+function saveFX() {
+  ["EUR","USD","GBP"].forEach(c => {
+    const v = parseFloat(document.getElementById("fx-"+c).value);
+    if (!isNaN(v) && v > 0) state.fx[c] = v;
+  });
+  ss("fx", state.fx);
+  renderHoldings();
+  renderUpdate();
+  flash("FX rates saved ✓");
+}
+
+// ═══════════════════════════════════════════════════════
+// QUARTERLY HISTORY
+// ═══════════════════════════════════════════════════════
+let histChart = null;
+
+function renderHistoryChart() {
+  const ctx = document.getElementById("hist-chart");
+  if (!ctx) return;
+  if (histChart) histChart.destroy();
+  const h = state.history;
+  histChart = new Chart(ctx, {
+    type:"line",
+    data:{
+      labels: h.map(x => x.q),
+      datasets:[
+        { label:"Market Value", data:h.map(x=>x.val), borderColor:"#3B82F6", backgroundColor:"rgba(59,130,246,0.07)", fill:true, borderWidth:2.5, pointRadius:3, tension:.4 },
+        { label:"Invested",     data:h.map(x=>x.inv), borderColor:"#F59E0B", borderDash:[5,4], borderWidth:2, pointRadius:0, tension:.4 },
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{labels:{color:"#8896B3",font:{size:12}}}, tooltip:{callbacks:{label:c=>" "+fmtPLN(c.raw)}} },
+      scales:{
+        x:{ticks:{color:"#4B5A7A",maxTicksLimit:12,maxRotation:45},grid:{color:"#1C2740"}},
+        y:{ticks:{color:"#4B5A7A",callback:v=>fmtK(v)},grid:{color:"#1C2740"}}
+      }
+    }
+  });
+}
+
+function renderHistoryTable() {
+  const tbody = document.getElementById("history-tbody");
+  tbody.innerHTML = [...state.history].reverse().map(r => {
+    const gain = r.val - r.inv;
+    const pct  = r.inv > 0 ? ((r.val/r.inv-1)*100).toFixed(1) : "0.0";
+    const c    = gain >= 0 ? "var(--green)" : "var(--red)";
+    return `<tr>
+      <td class="mono" style="font-weight:600">${r.q}</td>
+      <td class="mono" style="color:var(--muted2)">${fmtPLN(r.inv)}</td>
+      <td class="mono" style="color:var(--accent);font-weight:600">${fmtPLN(r.val)}</td>
+      <td class="mono" style="color:${c}">${gain>=0?"+":""}${fmtPLN(gain)}</td>
+      <td class="mono" style="color:${c}">${gain>=0?"+":""}${pct}%</td>
+      <td><button class="btn btn-danger" onclick="deleteQ('${r.q}')">✕</button></td>
+    </tr>`;
+  }).join("");
+}
+
+function toggleAddQ() {
+  const el = document.getElementById("add-q-form");
+  el.style.display = el.style.display === "none" ? "block" : "none";
+}
+
+function saveQuarter() {
+  const q   = document.getElementById("q-quarter").value.trim().toUpperCase();
+  const inv = parseFloat(document.getElementById("q-inv").value);
+  const val = parseFloat(document.getElementById("q-val").value);
+  if (!q || isNaN(inv) || isNaN(val)) { flash("Fill all fields", true); return; }
+  const idx = state.history.findIndex(r => r.q === q);
+  if (idx >= 0) state.history[idx] = {q, inv, val};
+  else { state.history.push({q, inv, val}); state.history.sort((a,b) => a.q.localeCompare(b.q)); }
+  ss("history", state.history);
+  toggleAddQ();
+  renderHistoryChart();
+  renderHistoryTable();
+  flash("Quarter saved ✓");
+}
+
+function deleteQ(q) {
+  if (!confirm("Delete "+q+"?")) return;
+  state.history = state.history.filter(r => r.q !== q);
+  ss("history", state.history);
+  renderHistoryChart();
+  renderHistoryTable();
+  flash("Deleted");
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+document.getElementById("f-date").value = new Date().toISOString().split("T")[0];
+document.getElementById("f-fx").value = state.fx["EUR"].toFixed(3);
+document.getElementById("f-currency").addEventListener("change", function() {
+  document.getElementById("f-fx").value = (state.fx[this.value] || 1).toFixed(3);
+});
+
+renderPurchases();
+renderHoldings();
+</script>
+</body>
+</html>
