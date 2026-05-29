@@ -936,6 +936,43 @@ document.getElementById("f-fx").value=state.fx["EUR"].toFixed(3);
 document.getElementById("f-currency").addEventListener("change",function(){
   document.getElementById("f-fx").value=(state.fx[this.value]||1).toFixed(3);
 });
+// IMPORT MODAL
+function openImportModal(){
+  document.getElementById("import-modal").style.display="block";
+  document.getElementById("import-textarea").value="";
+  document.getElementById("import-modal-error").style.display="none";
+  setTimeout(()=>document.getElementById("import-textarea").focus(),200);
+}
+function closeImportModal(){
+  document.getElementById("import-modal").style.display="none";
+}
+function importFromPaste(){
+  const raw=document.getElementById("import-textarea").value.trim();
+  const errEl=document.getElementById("import-modal-error");
+  errEl.style.display="none";
+  if(!raw){errEl.textContent="Paste JSON first";errEl.style.display="block";return;}
+  try{
+    const data=JSON.parse(raw);
+    if(!data.fx&&!data.holdings)throw new Error("Not a valid portfolio backup");
+    if(!confirm("Replace all current data?"))return;
+    ["fx","holdings","history","purchases","plan","meta"].forEach(k=>localStorage.removeItem("pf3_"+k));
+    if(data.fx)       {state.fx       =data.fx;        ss("fx",data.fx);}
+    if(data.holdings) {state.holdings =data.holdings;  ss("holdings",data.holdings);}
+    if(data.history)  {state.history  =data.history;   ss("history",data.history);}
+    if(data.purchases){state.purchases=data.purchases; ss("purchases",data.purchases);}
+    if(data.plan)     {state.plan     =data.plan;      ss("plan",     data.plan);}
+    if(data.meta)     {state.meta     =data.meta;      ss("meta",data.meta);}
+    state.history.sort((a,b)=>qKey(a)-qKey(b));
+    closeImportModal();
+    renderAll();
+    showTab("overview");
+    flash("Imported ✓");
+  }catch(err){
+    errEl.textContent="Error: "+err.message;
+    errEl.style.display="block";
+  }
+}
+
 
 renderAll();
 </script>
