@@ -132,7 +132,7 @@ input::placeholder{color:var(--muted)}
     <div style="margin-left:16px" id="updated-badge"></div>
     <div style="display:flex;gap:8px;padding-bottom:14px">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">⬇ Export</button>
-      <label class="btn btn-ghost btn-sm" style="cursor:pointer;margin:0">⬆ Import<input type="file" accept=".json" onchange="importData(event)" style="display:none"/></label>
+      <button class="btn btn-ghost btn-sm" onclick="openImportModal()">⬆ Import JSON</button>
     </div>
     <div class="header-total">
       <div class="lbl">Total Portfolio</div>
@@ -974,6 +974,26 @@ renderAll();
     <p style="color:var(--muted);font-size:11px;margin-top:10px">
       Starting point: current portfolio value · Contributions: 240k PLN/yr growing +5%/yr
     </p>
+  </div>
+</div>
+
+
+<!-- IMPORT MODAL -->
+<div id="import-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;padding:20px;overflow-y:auto">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;max-width:600px;margin:40px auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h2 style="font-size:16px;font-weight:700">Import Portfolio JSON</h2>
+      <button onclick="closeImportModal()" style="background:none;border:none;color:var(--muted2);font-size:20px;cursor:pointer">✕</button>
+    </div>
+    <p style="font-size:13px;color:var(--muted2);margin-bottom:12px">
+      Open your <code style="background:var(--card2);padding:2px 6px;border-radius:4px">portfolio-backup-*.json</code> file, select all text, copy, then paste below:
+    </p>
+    <textarea id="import-textarea" placeholder='Paste your JSON here...' style="width:100%;height:200px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text);font-family:monospace;font-size:12px;resize:vertical;outline:none"></textarea>
+    <div style="display:flex;gap:10px;margin-top:14px">
+      <button class="btn btn-primary" style="flex:1" onclick="importFromPaste()">Import</button>
+      <button class="btn btn-ghost" onclick="closeImportModal()">Cancel</button>
+    </div>
+    <p id="import-modal-error" style="color:var(--red);font-size:12px;margin-top:10px;display:none"></p>
   </div>
 </div>
 
