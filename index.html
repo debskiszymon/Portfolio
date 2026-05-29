@@ -424,6 +424,16 @@ function renderPlan() {
   const d_base  = [total, ...proj.slice(0, 15).map(p => p.p_base)];
   const d_opt   = [total, ...proj.slice(0, 15).map(p => p.p_opt)];
   const d_fi    = Array(labels.length).fill(fiVal);
+
+  // Update table headers and footer from JSON
+  document.getElementById("plan-chart-label").textContent = "Actual Portfolio vs Plan (base " + bLabel + ") — from " + a.startYear;
+  document.getElementById("th-pess").textContent = "Plan " + pLabel;
+  document.getElementById("th-base").textContent = "Plan " + bLabel;
+  document.getElementById("th-opt").textContent  = "Plan " + oLabel;
+  document.getElementById("plan-footer-note").textContent =
+    fmtPLN(a.baseAnnualContribution) + " in yr1, " + fmtPLN(a.year2Contribution) + " in yr2, then +" +
+    Math.round(a.contributionGrowthRate * 100) + "%/yr · Scenarios: " +
+    pLabel + " / " + bLabel + " / " + oLabel;
   const tickC = "#4B5A7A", gridC = "#1C2740";
 
   planChart = new Chart(ctx, {
@@ -989,7 +999,7 @@ renderAll();
 
   <!-- Chart: actual vs plan -->
   <div class="card gap">
-    <div class="section-label">Actual Portfolio vs Plan (base 9%) — from 2026</div>
+    <div class="section-label" id="plan-chart-label">Actual Portfolio vs Plan — from 2026</div>
     <div class="chart-wrap tall"><canvas id="plan-chart"></canvas></div>
   </div>
 
@@ -1006,14 +1016,14 @@ renderAll();
       <table>
         <thead><tr>
           <th>Year</th><th>Age</th><th>Annual Contribution</th>
-          <th>Plan 7%</th><th>Plan 9%</th><th>Plan 11%</th>
+          <th id="th-pess">—</th><th id="th-base">—</th><th id="th-opt">—</th>
           <th>Passive/month (4%)</th><th>Milestone</th>
         </tr></thead>
         <tbody id="plan-tbody"></tbody>
       </table>
     </div>
     <p style="color:var(--muted);font-size:11px;margin-top:10px">
-      Starting point: current portfolio value · Contributions: 240k PLN/yr growing +5%/yr
+      Starting point: current portfolio value · <span id="plan-footer-note">Import JSON to see assumptions</span>
     </p>
   </div>
 </div>
