@@ -338,121 +338,125 @@ let planChart = null;
 
 function renderPlan() {
   const plan = state.plan;
-  if (!plan) { document.getElementById("plan-kpis").innerHTML = '<div class="card"><p style="color:var(--muted)">No plan data in JSON. Import updated JSON to see plan.</p></div>'; return; }
+  if (!plan) {
+    document.getElementById("plan-kpis").innerHTML =
+      '<div class="card" style="grid-column:1/-1"><p style="color:var(--muted)">No plan data. Import JSON to see plan.</p></div>';
+    return;
+  }
 
-  const proj     = plan.projection;
-  const total    = totalPortfolio();
-  const lastHist = state.history.at(-1);
-  const totalInv = lastHist ? lastHist.inv : 0;
+  const a      = plan.assumptions;
+  const proj   = plan.projection;
+  const rates  = a.rates;
+  const total  = totalPortfolio();
+  const lastH  = state.history.at(-1);
 
-  // Year 1 target (end of 2026)
-  const yr1plan = proj[0];
-  const onTrack = total >= yr1plan.p9 * 0.95;
-  const pctOfPlan = total > 0 && yr1plan.p9 > 0 ? (total / yr1plan.p9 * 100).toFixed(0) : "—";
+  // Labels from JSON
+  const pLabel = (Math.round(rates.pessimistic * 100)) + "%";
+  const bLabel = (Math.round(rates.base        * 100)) + "%";
+  const oLabel = (Math.round(rates.optimistic  * 100)) + "%";
+  const fiVal  = a.targetFIValue;
+  const fiAge  = a.targetFIAge;
+  const baseYr1 = proj[0].p_base;
+  const fiRow  = proj.find(p => p.age === fiAge) || proj[14];
 
-  // KPIs
+  const onTrack   = total >= baseYr1 * 0.95;
+  const pctOfPlan = baseYr1 > 0 ? (total / baseYr1 * 100).toFixed(0) : "—";
+
+  // KPIs — all from JSON
   document.getElementById("plan-kpis").innerHTML = `
     <div class="card">
       <div class="kpi-lbl">Current Portfolio</div>
       <div class="kpi-val" style="color:var(--accent)">${fmtPLN(total)}</div>
-      <div class="kpi-sub">as of today</div>
+      <div class="kpi-sub">as of ${a.startYear}</div>
     </div>
     <div class="card">
-      <div class="kpi-lbl">Year 1 Plan Target (9%)</div>
-      <div class="kpi-val" style="color:var(--muted2)">${fmtPLN(yr1plan.p9)}</div>
-      <div class="kpi-sub">end of 2026</div>
+      <div class="kpi-lbl">Year 1 Target (${bLabel})</div>
+      <div class="kpi-val" style="color:var(--muted2)">${fmtPLN(baseYr1)}</div>
+      <div class="kpi-sub">end of ${a.startYear}</div>
     </div>
     <div class="card">
       <div class="kpi-lbl">On Track</div>
-      <div class="kpi-val" style="color:${onTrack?'var(--green)':'var(--yellow)'}">${pctOfPlan}% of plan</div>
+      <div class="kpi-val" style="color:${onTrack?"var(--green)":"var(--yellow)"}">${pctOfPlan}% of plan</div>
       <div class="kpi-sub">${onTrack ? "✓ On track" : "⚠ Below plan"}</div>
     </div>
     <div class="card">
-      <div class="kpi-lbl">FI Target (age 57)</div>
-      <div class="kpi-val" style="color:var(--purple)">13.9M PLN</div>
-      <div class="kpi-sub">year 15 · base scenario</div>
+      <div class="kpi-lbl">FI Target (age ${fiAge})</div>
+      <div class="kpi-val" style="color:var(--purple)">${fmtPLN(fiVal)}</div>
+      <div class="kpi-sub">yr ${fiRow ? fiRow.year : 15} · base ${bLabel} → ${fmtPLN(fiRow ? fiRow.p_base : 0)}</div>
     </div>`;
 
   // Contributions tracker
-  const annualTarget = plan.assumptions.baseAnnualContribution;
-  const actualInvThisYear = (() => {
-    // Sum purchases from 2026
-    return state.purchases
-      .filter(p => p.date && p.date.startsWith("2026"))
-      .reduce((s, p) => s + p.qty * p.price * (p.fx || state.fx[p.currency] || 1), 0);
-  })();
-  const pctContrib = annualTarget > 0 ? Math.min(100, actualInvThisYear / annualTarget * 100) : 0;
+  const annualTarget = a.baseAnnualContribution;
+  const actualThisYear = state.purchases
+    .filter(p => p.date && p.date.startsWith(String(a.startYear)))
+    .reduce((s, p) => s + p.qty * p.price * (p.fx || state.fx[p.currency] || 1), 0);
+  const pctContrib = Math.min(100, annualTarget > 0 ? actualThisYear / annualTarget * 100 : 0);
 
   document.getElementById("plan-contributions").innerHTML = `
     <div style="margin-bottom:16px">
       <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-        <span style="font-size:13px">2026 contributions</span>
-        <span class="mono" style="font-size:13px;color:var(--accent)">${fmtPLN(actualInvThisYear)} / ${fmtPLN(annualTarget)}</span>
+        <span style="font-size:13px">${a.startYear} contributions (tracked purchases)</span>
+        <span class="mono" style="font-size:13px;color:var(--accent)">${fmtPLN(actualThisYear)} / ${fmtPLN(annualTarget)}</span>
       </div>
       <div class="prog-bar"><div class="prog-fill" style="background:var(--accent);width:${pctContrib.toFixed(0)}%"></div></div>
-      <p style="font-size:11px;color:var(--muted);margin-top:6px">${pctContrib.toFixed(0)}% of annual target · ${fmtPLN(annualTarget - actualInvThisYear)} remaining</p>
+      <p style="font-size:11px;color:var(--muted);margin-top:6px">${pctContrib.toFixed(0)}% of ${a.startYear} target · ${fmtPLN(annualTarget - actualThisYear)} remaining</p>
     </div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
       <div class="card2">
-        <div style="font-size:11px;color:var(--muted2)">Annual target (2026)</div>
-        <div class="mono" style="font-size:16px;font-weight:600;color:var(--accent2)">${fmtPLN(annualTarget)}</div>
+        <div style="font-size:11px;color:var(--muted2)">Annual target</div>
+        <div class="mono" style="font-size:16px;font-weight:600;color:var(--accent)">${fmtPLN(annualTarget)}</div>
       </div>
       <div class="card2">
         <div style="font-size:11px;color:var(--muted2)">Monthly target</div>
-        <div class="mono" style="font-size:16px;font-weight:600;color:var(--accent2)">${fmtPLN(annualTarget/12)}</div>
+        <div class="mono" style="font-size:16px;font-weight:600;color:var(--accent)">${fmtPLN(annualTarget / 12)}</div>
       </div>
       <div class="card2">
-        <div style="font-size:11px;color:var(--muted2)">Next year target (+5%)</div>
-        <div class="mono" style="font-size:16px;font-weight:600;color:var(--muted2)">${fmtPLN(annualTarget * 1.05)}</div>
+        <div style="font-size:11px;color:var(--muted2)">Contribution growth</div>
+        <div class="mono" style="font-size:16px;font-weight:600;color:var(--muted2)">${Math.round(a.salaryGrowthRate * a.investShareOfRaise * 100)}%/yr</div>
       </div>
     </div>`;
 
-  // Chart
+  // Chart — labels and data from JSON
   const ctx = document.getElementById("plan-chart");
   if (planChart) planChart.destroy();
-
-  // Build actual history points from 2026 onwards (just today)
-  const labels = ["Today", ...proj.map(p => `Yr ${p.year} (${p.age})`).slice(0, 15)];
-  const p7data  = [total, ...proj.slice(0, 15).map(p => p.p7)];
-  const p9data  = [total, ...proj.slice(0, 15).map(p => p.p9)];
-  const p11data = [total, ...proj.slice(0, 15).map(p => p.p11)];
+  const labels  = ["Today", ...proj.slice(0, 15).map(p => `Yr ${p.year} (${p.age})`)];
+  const d_pess  = [total, ...proj.slice(0, 15).map(p => p.p_pess)];
+  const d_base  = [total, ...proj.slice(0, 15).map(p => p.p_base)];
+  const d_opt   = [total, ...proj.slice(0, 15).map(p => p.p_opt)];
+  const d_fi    = Array(labels.length).fill(fiVal);
+  const tickC = "#4B5A7A", gridC = "#1C2740";
 
   planChart = new Chart(ctx, {
     type: "line",
-    data: {
-      labels,
-      datasets: [
-        { label:"Pessimistic 7%", data:p7data, borderColor:"#EF4444", borderDash:[4,3], borderWidth:2, pointRadius:2, tension:.4 },
-        { label:"Base 9%",        data:p9data, borderColor:"#3B82F6", borderWidth:2.5, pointRadius:3, pointBackgroundColor:"#3B82F6", tension:.4 },
-        { label:"Optimistic 11%", data:p11data,borderColor:"#22C55E", borderDash:[4,3], borderWidth:2, pointRadius:2, tension:.4 },
-        { label:"FI Target (13.9M)", data:Array(labels.length).fill(13900000),
-          borderColor:"#F59E0B", borderDash:[8,4], borderWidth:1.5, pointRadius:0 },
-      ]
-    },
+    data: { labels, datasets: [
+      { label: `Pessimistic ${pLabel}`, data: d_pess, borderColor:"#EF4444", borderDash:[4,3], borderWidth:2, pointRadius:2, tension:.4 },
+      { label: `Base ${bLabel}`,        data: d_base, borderColor:"#3B82F6", borderWidth:2.5, pointRadius:3, pointBackgroundColor:"#3B82F6", tension:.4 },
+      { label: `Optimistic ${oLabel}`,  data: d_opt,  borderColor:"#22C55E", borderDash:[4,3], borderWidth:2, pointRadius:2, tension:.4 },
+      { label: `FI Target (${fmtPLN(fiVal)})`, data: d_fi, borderColor:"#F59E0B", borderDash:[8,4], borderWidth:1.5, pointRadius:0 },
+    ]},
     options: {
       responsive:true, maintainAspectRatio:false,
       plugins: {
-        legend:{labels:{color:"#8896B3",font:{size:12}}},
+        legend:{labels:{color:tickC,font:{size:12}}},
         tooltip:{callbacks:{label:c=>" "+fmtPLN(c.raw)}}
       },
-      scales: {
-        x:{ticks:{color:"#4B5A7A"},grid:{color:"#1C2740"}},
-        y:{ticks:{color:"#4B5A7A",callback:v=>fmtK(v)},grid:{color:"#1C2740"}}
+      scales:{
+        x:{ticks:{color:tickC},grid:{color:gridC}},
+        y:{ticks:{color:tickC,callback:v=>fmtK(v)},grid:{color:gridC}}
       }
     }
   });
 
-  // Table
-  const tbody = document.getElementById("plan-tbody");
-  tbody.innerHTML = proj.map(p => `
-    <tr style="${p.milestone ? 'background:rgba(59,130,246,0.05)' : ''}">
+  // Table — all from JSON
+  document.getElementById("plan-tbody").innerHTML = proj.map(p => `
+    <tr style="${p.milestone ? "background:rgba(59,130,246,0.05)" : ""}">
       <td class="mono">${p.year}</td>
       <td>${p.age}</td>
-      <td class="mono" style="color:var(--accent2)">${fmtPLN(p.contribution)}</td>
-      <td class="mono" style="color:var(--red)">${fmtPLN(p.p7)}</td>
-      <td class="mono" style="color:var(--accent);font-weight:600">${fmtPLN(p.p9)}</td>
-      <td class="mono" style="color:var(--green)">${fmtPLN(p.p11)}</td>
-      <td class="mono" style="color:var(--accent2)">${Math.round(p.p9*0.04/12).toLocaleString("pl")} PLN</td>
+      <td class="mono" style="color:var(--muted2)">${fmtPLN(p.contribution)}</td>
+      <td class="mono" style="color:var(--red)">${fmtPLN(p.p_pess)}</td>
+      <td class="mono" style="color:var(--accent);font-weight:600">${fmtPLN(p.p_base)}</td>
+      <td class="mono" style="color:var(--green)">${fmtPLN(p.p_opt)}</td>
+      <td class="mono" style="color:var(--muted2)">${Math.round(p.p_base * 0.04 / 12).toLocaleString()} PLN</td>
       <td>${p.milestone || ""}</td>
     </tr>`).join("");
 }
