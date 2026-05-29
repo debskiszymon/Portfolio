@@ -141,6 +141,7 @@ input::placeholder{color:var(--muted)}
     <nav>
       <button class="active" onclick="showTab('overview')">Overview</button>
       <button onclick="showTab('history')">History</button>
+      <button onclick="showTab('plan')">Plan</button>
     </nav>
   </div>
 </header>
@@ -329,9 +330,137 @@ const DEF_HISTORY = [
 const DEF_FX    = {EUR:4.25,USD:3.95,GBP:5.00,PLN:1};
 const DEF_META  = {updated:"2026-05-29"};
 
-let function qKey(r){const[q,y]=r.q.split("-");return+y*10+ +q[1]}
+let 
+// ═══════════════════════════════════════════════════════
+// PLAN
+// ═══════════════════════════════════════════════════════
+let planChart = null;
+
+function renderPlan() {
+  const plan = state.plan;
+  if (!plan) { document.getElementById("plan-kpis").innerHTML = '<div class="card"><p style="color:var(--muted)">No plan data in JSON. Import updated JSON to see plan.</p></div>'; return; }
+
+  const proj     = plan.projection;
+  const total    = totalPortfolio();
+  const lastHist = state.history.at(-1);
+  const totalInv = lastHist ? lastHist.inv : 0;
+
+  // Year 1 target (end of 2026)
+  const yr1plan = proj[0];
+  const onTrack = total >= yr1plan.p9 * 0.95;
+  const pctOfPlan = total > 0 && yr1plan.p9 > 0 ? (total / yr1plan.p9 * 100).toFixed(0) : "—";
+
+  // KPIs
+  document.getElementById("plan-kpis").innerHTML = `
+    <div class="card">
+      <div class="kpi-lbl">Current Portfolio</div>
+      <div class="kpi-val" style="color:var(--accent)">${fmtPLN(total)}</div>
+      <div class="kpi-sub">as of today</div>
+    </div>
+    <div class="card">
+      <div class="kpi-lbl">Year 1 Plan Target (9%)</div>
+      <div class="kpi-val" style="color:var(--muted2)">${fmtPLN(yr1plan.p9)}</div>
+      <div class="kpi-sub">end of 2026</div>
+    </div>
+    <div class="card">
+      <div class="kpi-lbl">On Track</div>
+      <div class="kpi-val" style="color:${onTrack?'var(--green)':'var(--yellow)'}">${pctOfPlan}% of plan</div>
+      <div class="kpi-sub">${onTrack ? "✓ On track" : "⚠ Below plan"}</div>
+    </div>
+    <div class="card">
+      <div class="kpi-lbl">FI Target (age 57)</div>
+      <div class="kpi-val" style="color:var(--purple)">13.9M PLN</div>
+      <div class="kpi-sub">year 15 · base scenario</div>
+    </div>`;
+
+  // Contributions tracker
+  const annualTarget = plan.assumptions.baseAnnualContribution;
+  const actualInvThisYear = (() => {
+    // Sum purchases from 2026
+    return state.purchases
+      .filter(p => p.date && p.date.startsWith("2026"))
+      .reduce((s, p) => s + p.qty * p.price * (p.fx || state.fx[p.currency] || 1), 0);
+  })();
+  const pctContrib = annualTarget > 0 ? Math.min(100, actualInvThisYear / annualTarget * 100) : 0;
+
+  document.getElementById("plan-contributions").innerHTML = `
+    <div style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:13px">2026 contributions</span>
+        <span class="mono" style="font-size:13px;color:var(--accent)">${fmtPLN(actualInvThisYear)} / ${fmtPLN(annualTarget)}</span>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" style="background:var(--accent);width:${pctContrib.toFixed(0)}%"></div></div>
+      <p style="font-size:11px;color:var(--muted);margin-top:6px">${pctContrib.toFixed(0)}% of annual target · ${fmtPLN(annualTarget - actualInvThisYear)} remaining</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+      <div class="card2">
+        <div style="font-size:11px;color:var(--muted2)">Annual target (2026)</div>
+        <div class="mono" style="font-size:16px;font-weight:600;color:var(--accent2)">${fmtPLN(annualTarget)}</div>
+      </div>
+      <div class="card2">
+        <div style="font-size:11px;color:var(--muted2)">Monthly target</div>
+        <div class="mono" style="font-size:16px;font-weight:600;color:var(--accent2)">${fmtPLN(annualTarget/12)}</div>
+      </div>
+      <div class="card2">
+        <div style="font-size:11px;color:var(--muted2)">Next year target (+5%)</div>
+        <div class="mono" style="font-size:16px;font-weight:600;color:var(--muted2)">${fmtPLN(annualTarget * 1.05)}</div>
+      </div>
+    </div>`;
+
+  // Chart
+  const ctx = document.getElementById("plan-chart");
+  if (planChart) planChart.destroy();
+
+  // Build actual history points from 2026 onwards (just today)
+  const labels = ["Today", ...proj.map(p => `Yr ${p.year} (${p.age})`).slice(0, 15)];
+  const p7data  = [total, ...proj.slice(0, 15).map(p => p.p7)];
+  const p9data  = [total, ...proj.slice(0, 15).map(p => p.p9)];
+  const p11data = [total, ...proj.slice(0, 15).map(p => p.p11)];
+
+  planChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        { label:"Pessimistic 7%", data:p7data, borderColor:"#EF4444", borderDash:[4,3], borderWidth:2, pointRadius:2, tension:.4 },
+        { label:"Base 9%",        data:p9data, borderColor:"#3B82F6", borderWidth:2.5, pointRadius:3, pointBackgroundColor:"#3B82F6", tension:.4 },
+        { label:"Optimistic 11%", data:p11data,borderColor:"#22C55E", borderDash:[4,3], borderWidth:2, pointRadius:2, tension:.4 },
+        { label:"FI Target (13.9M)", data:Array(labels.length).fill(13900000),
+          borderColor:"#F59E0B", borderDash:[8,4], borderWidth:1.5, pointRadius:0 },
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins: {
+        legend:{labels:{color:"#8896B3",font:{size:12}}},
+        tooltip:{callbacks:{label:c=>" "+fmtPLN(c.raw)}}
+      },
+      scales: {
+        x:{ticks:{color:"#4B5A7A"},grid:{color:"#1C2740"}},
+        y:{ticks:{color:"#4B5A7A",callback:v=>fmtK(v)},grid:{color:"#1C2740"}}
+      }
+    }
+  });
+
+  // Table
+  const tbody = document.getElementById("plan-tbody");
+  tbody.innerHTML = proj.map(p => `
+    <tr style="${p.milestone ? 'background:rgba(59,130,246,0.05)' : ''}">
+      <td class="mono">${p.year}</td>
+      <td>${p.age}</td>
+      <td class="mono" style="color:var(--accent2)">${fmtPLN(p.contribution)}</td>
+      <td class="mono" style="color:var(--red)">${fmtPLN(p.p7)}</td>
+      <td class="mono" style="color:var(--accent);font-weight:600">${fmtPLN(p.p9)}</td>
+      <td class="mono" style="color:var(--green)">${fmtPLN(p.p11)}</td>
+      <td class="mono" style="color:var(--accent2)">${Math.round(p.p9*0.04/12).toLocaleString("pl")} PLN</td>
+      <td>${p.milestone || ""}</td>
+    </tr>`).join("");
+}
+
+function qKey(r){const[q,y]=r.q.split("-");return+y*10+ +q[1]}
 
 state = {
+  plan:      ls("plan",      null),
   holdings:  ls("holdings",  DEF_HOLDINGS),
   history:   ls("history",   DEF_HISTORY),
   purchases: ls("purchases", []),
@@ -375,7 +504,7 @@ function totalCost(){
 // ═══════════════════════════════════════
 // TABS
 // ═══════════════════════════════════════
-const TABS=["overview","history"];
+const TABS=["overview","history","plan"];
 let charts={};
 
 function showTab(t){
@@ -385,6 +514,7 @@ function showTab(t){
   TABS.forEach((name,i)=>{if(name===t)document.querySelectorAll("nav button")[i].classList.add("active")});
   if(t==="overview"){renderPieCharts();}
   if(t==="history"){renderHistCharts();}
+  if(t==="plan"){renderPlan();}
 }
 
 // ═══════════════════════════════════════
@@ -747,7 +877,7 @@ function deletePurchase(id){
 // ═══════════════════════════════════════
 function exportData(){
   const data={version:2,exported:new Date().toISOString(),
-    fx:state.fx,holdings:state.holdings,history:state.history,
+    fx:state.fx,holdings:state.holdings,history:state.history,plan:state.plan,
     purchases:state.purchases,meta:state.meta};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob);
@@ -772,6 +902,7 @@ function importData(e){
       if(data.holdings) {state.holdings =data.holdings;  ss("holdings",data.holdings);}
       if(data.history)  {state.history  =data.history;   ss("history",data.history);}
       if(data.purchases){state.purchases=data.purchases; ss("purchases",data.purchases);}
+      if(data.plan)     {state.plan     =data.plan;      ss("plan",     data.plan);}
       if(data.meta)     {state.meta     =data.meta;      ss("meta",data.meta);}
       renderAll();
       flash("Imported ✓ — data updated");
@@ -797,5 +928,43 @@ document.getElementById("f-currency").addEventListener("change",function(){
 
 renderAll();
 </script>
+
+<!-- ═══════════ PLAN ═══════════ -->
+<div class="page" id="page-plan">
+
+  <!-- Status KPIs -->
+  <div class="grid4 gap" id="plan-kpis"></div>
+
+  <!-- Chart: actual vs plan -->
+  <div class="card gap">
+    <div class="section-label">Actual Portfolio vs Plan (base 9%) — from 2026</div>
+    <div class="chart-wrap tall"><canvas id="plan-chart"></canvas></div>
+  </div>
+
+  <!-- On track indicator -->
+  <div class="card gap" id="plan-status-card">
+    <div class="section-label">Plan Tracker — Annual Contributions</div>
+    <div id="plan-contributions"></div>
+  </div>
+
+  <!-- Projection table -->
+  <div class="card">
+    <div class="section-label">20-Year Projection from today</div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th>Year</th><th>Age</th><th>Annual Contribution</th>
+          <th>Plan 7%</th><th>Plan 9%</th><th>Plan 11%</th>
+          <th>Passive/month (4%)</th><th>Milestone</th>
+        </tr></thead>
+        <tbody id="plan-tbody"></tbody>
+      </table>
+    </div>
+    <p style="color:var(--muted);font-size:11px;margin-top:10px">
+      Starting point: current portfolio value · Contributions: 240k PLN/yr growing +5%/yr
+    </p>
+  </div>
+</div>
+
 </body>
 </html>
