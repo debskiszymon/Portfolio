@@ -330,7 +330,6 @@ const DEF_HISTORY = [
 const DEF_FX    = {EUR:4.25,USD:3.95,GBP:5.00,PLN:1};
 const DEF_META  = {updated:"2026-05-29"};
 
-let 
 // ═══════════════════════════════════════════════════════
 // PLAN
 // ═══════════════════════════════════════════════════════
@@ -459,7 +458,7 @@ function renderPlan() {
 
 function qKey(r){const[q,y]=r.q.split("-");return+y*10+ +q[1]}
 
-state = {
+let state = {
   plan:      ls("plan",      null),
   holdings:  ls("holdings",  DEF_HOLDINGS),
   history:   ls("history",   DEF_HISTORY),
