@@ -132,7 +132,8 @@ input::placeholder{color:var(--muted)}
     <div style="margin-left:16px" id="updated-badge"></div>
     <div style="display:flex;gap:8px;padding-bottom:14px">
       <button class="btn btn-ghost btn-sm" onclick="exportData()">⬇ Export</button>
-      <button class="btn btn-ghost btn-sm" onclick="openImportModal()">⬆ Import JSON</button>
+      <label class="btn btn-ghost btn-sm" style="cursor:pointer;margin:0">⬆ Import<input type="file" accept=".json,application/json" onchange="importData(event)" style="display:none"/></label>
+      <button class="btn btn-ghost btn-sm" onclick="openImportModal()">📋 Paste</button>
     </div>
     <div class="header-total">
       <div class="lbl">Total Portfolio</div>
