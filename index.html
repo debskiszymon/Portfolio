@@ -896,18 +896,29 @@ function importData(e){
   reader.onload=function(ev){
     try{
       const data=JSON.parse(ev.target.result);
-      if(!data.version)throw new Error("Invalid");
-      if(!confirm("Replace all data with imported file?"))return;
+      if(!data.fx && !data.holdings)throw new Error("Not a valid portfolio backup");
+      if(!confirm("Replace all current data with imported file?"))return;
+      // Clear all keys first
+      ["fx","holdings","history","purchases","plan","meta"].forEach(k=>localStorage.removeItem("pf3_"+k));
+      // Set new data
       if(data.fx)       {state.fx       =data.fx;        ss("fx",data.fx);}
       if(data.holdings) {state.holdings =data.holdings;  ss("holdings",data.holdings);}
       if(data.history)  {state.history  =data.history;   ss("history",data.history);}
       if(data.purchases){state.purchases=data.purchases; ss("purchases",data.purchases);}
       if(data.plan)     {state.plan     =data.plan;      ss("plan",     data.plan);}
       if(data.meta)     {state.meta     =data.meta;      ss("meta",data.meta);}
+      // Re-sort history
+      state.history.sort((a,b)=>qKey(a)-qKey(b));
+      // Full re-render
       renderAll();
-      flash("Imported ✓ — data updated");
-    }catch{flash("Invalid file",true);}
+      showTab("overview");
+      flash("✓ Imported — "+Object.keys(data).length+" sections loaded");
+    }catch(err){
+      flash("Import failed: "+err.message, true);
+      console.error(err);
+    }
   };
+  reader.onerror=function(){ flash("Could not read file",true); };
   reader.readAsText(file);
   e.target.value="";
 }
